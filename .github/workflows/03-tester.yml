@@ -68,7 +68,8 @@ jobs:
       - name: 提取最终结论
         id: result
         run: |
-          VERDICT=$(grep -E "^(PASS|FAIL)$" "$ISSUE_DIR/04-report.md" | tail -1 || echo "UNKNOWN")
+          VERDICT=$(grep -oE '\*{0,2}(PASS|FAIL)\*{0,2}' "$ISSUE_DIR/04-report.md" \
+            | sed 's/\*//g' | grep -E '^(PASS|FAIL)$' | tail -1 || echo "UNKNOWN")
           echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
 
       - name: 提交产物
