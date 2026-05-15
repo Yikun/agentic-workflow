@@ -17,24 +17,64 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: 执行验收测试
-        id: acceptance
-        continue-on-error: true
+
+      - name: 配置 Git
         run: |
-          python -m agentic_workflow.acceptance \
-            --repo-root . \
-            --test-cases artifacts/03-test-cases.md \
-            --source-dir artifacts/src \
-            --report artifacts/04-report.md \
-            --output "$GITHUB_OUTPUT"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git pull --rebase
+
+      - name: 校验依赖产物
+        run: |
+          test -f artifacts/03-test-cases.md
+          test -d artifacts/src
+
+      - name: 安装 Python 依赖
+        run: pip install -e artifacts/src/
+
+      - name: 安装 opencode
+        run: curl -fsSL https://opencode.ai/install | sh
+
+      - name: 配置 opencode 凭据
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+        run: |
+          mkdir -p ~/.local/share/opencode
+          printf '{"alibaba-cn":{"type":"api","key":"%s"}}' "$DASHSCOPE_API_KEY" \
+            > ~/.local/share/opencode/auth.json
+
+      - name: 运行 tester Agent
+        run: |
+          ~/.opencode/bin/opencode run \
+            --dangerously-skip-permissions \
+            -m alibaba-cn/qwen-plus \
+            "$(cat agents/tester/CLAUDE.md)"
+
+      - name: 校验测试报告
+        run: test -f artifacts/04-report.md
+
+      - name: 提取最终结论
+        id: result
+        run: |
+          VERDICT=$(grep -E "^(PASS|FAIL)$" artifacts/04-report.md | tail -1 || echo "UNKNOWN")
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+
+      - name: 提交产物
+        run: |
+          git add artifacts/04-report.md
+          git commit -m "ci: 验收测试报告 (Issue #${{ inputs.issue_number }})" || true
+          git push
+
       - name: 发布测试结论
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RESULT="${{ steps.acceptance.outputs.final_result }}"
-          gh issue comment ${{ inputs.issue_number }} --body "阶段三测试已完成，结论：$RESULT。请查看 artifacts/04-report.md。"
+          RESULT="${{ steps.result.outputs.verdict }}"
+          gh issue comment ${{ inputs.issue_number }} \
+            --body "阶段三验收测试已完成，最终结论：**$RESULT**。详见 \`artifacts/04-report.md\`。"
+
       - name: 若验收失败则标记工作流失败
-        if: ${{ steps.acceptance.outputs.final_result != 'PASS' }}
+        if: ${{ steps.result.outputs.verdict != 'PASS' }}
         run: |
           echo "验收测试结论为 FAIL。"
           exit 1

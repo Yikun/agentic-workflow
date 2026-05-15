@@ -16,7 +16,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: 生成验收用例
+
+      - name: 配置 Git
         run: |
-          echo "请在此步骤调用 testcase-dev Agent"
-          test -f artifacts/03-test-cases.md || (echo "缺少 artifacts/03-test-cases.md" && exit 1)
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git pull --rebase
+
+      - name: 校验依赖产物
+        run: |
+          test -f artifacts/01-requirements.md
+          test -d artifacts/src
+
+      - name: 安装 opencode
+        run: curl -fsSL https://opencode.ai/install | sh
+
+      - name: 配置 opencode 凭据
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+        run: |
+          mkdir -p ~/.local/share/opencode
+          printf '{"alibaba-cn":{"type":"api","key":"%s"}}' "$DASHSCOPE_API_KEY" \
+            > ~/.local/share/opencode/auth.json
+
+      - name: 运行 testcase-dev Agent
+        run: |
+          ~/.opencode/bin/opencode run \
+            --dangerously-skip-permissions \
+            -m alibaba-cn/qwen-plus \
+            "$(cat agents/testcase-dev/CLAUDE.md)"
+
+      - name: 校验产物
+        run: test -f artifacts/03-test-cases.md
+
+      - name: 提交产物
+        run: |
+          git add artifacts/03-test-cases.md
+          git commit -m "ci: 验收测试用例 (Issue #${{ inputs.issue_number }})" || true
+          git push

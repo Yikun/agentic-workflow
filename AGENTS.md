@@ -30,3 +30,6 @@
 - Agent 在生成代码后，须在本地执行上述 lint/格式检查并确认通过，再提交到 feature 分支。
 - Agent 不得修改 `artifacts/01-requirements.md`（需求文档由 requirements agent 负责）。
 - Agent 不得绕过 FR-04 定义的人工审批门禁（`/approve` 评论）自动推进阶段。
+
+## 重要提示
+- 如果测试出现问题，请在artifacts目录先修改对应的设计文档、开发、测试，然后再进行
