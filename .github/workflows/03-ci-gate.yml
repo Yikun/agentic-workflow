@@ -31,7 +31,10 @@ jobs:
         run: |
           ISSUE_NO="${{ steps.gate.outputs.issue_number }}"
           gh issue comment "$ISSUE_NO" --body "PR Required CI 检查已全部通过，自动进入第三阶段测试。"
-          gh workflow run 03-tester.yml --repo ${{ github.repository }} -f issue_number="$ISSUE_NO"
+          gh workflow run 03-tester.yml \
+            --repo ${{ github.repository }} \
+            --ref "${{ github.ref_name }}" \
+            -f issue_number="$ISSUE_NO"
       - name: 记录门禁未通过原因
         if: ${{ steps.gate.outputs.pass != 'true' }}
         run: |

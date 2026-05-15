@@ -75,4 +75,7 @@ jobs:
         run: |
           gh issue comment "${{ inputs.issue_number }}" -R "${{ github.repository }}" \
             --body "验收测试用例已生成，自动进入第三阶段测试。"
-          gh workflow run 03-tester.yml -R "${{ github.repository }}" -f issue_number=${{ inputs.issue_number }}
+          gh workflow run 03-tester.yml \
+            -R "${{ github.repository }}" \
+            --ref ${{ github.ref_name }} \
+            -f issue_number=${{ inputs.issue_number }}

@@ -75,4 +75,5 @@ jobs:
         run: |
           gh workflow run 01-requirements-qa.yml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref_name }} \
             -f issue_number=${{ inputs.issue_number }}
