@@ -24,13 +24,24 @@ jobs:
           git config user.name "GitHub Actions"
           git pull --rebase
 
+      - name: 计算 Issue 工作目录
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NO="${{ inputs.issue_number }}"
+          TITLE=$(gh issue view "$ISSUE_NO" -R "${{ github.repository }}" --json title --jq '.title')
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' | cut -c1-40)
+          echo "ISSUE_DIR=agentic-issues/issue-${ISSUE_NO}-${SLUG}" >> "$GITHUB_ENV"
+
       - name: 校验依赖产物
         run: |
-          test -f artifacts/03-test-cases.md
-          test -d artifacts/src
+          test -f "$ISSUE_DIR/03-test-cases.md"
+          test -d "$ISSUE_DIR/src"
 
       - name: 安装 Python 依赖
-        run: pip install -e artifacts/src/
+        run: pip install -e src/
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -45,23 +56,24 @@ jobs:
 
       - name: 运行 tester Agent
         run: |
+          PROMPT=$(sed "s|artifacts/|${ISSUE_DIR}/|g" .github/workflows/agents/tester/CLAUDE.md)
           ~/.opencode/bin/opencode run \
             --dangerously-skip-permissions \
             -m alibaba-cn/qwen-plus \
-            "$(cat agents/tester/CLAUDE.md)"
+            "$PROMPT"
 
       - name: 校验测试报告
-        run: test -f artifacts/04-report.md
+        run: test -f "$ISSUE_DIR/04-report.md"
 
       - name: 提取最终结论
         id: result
         run: |
-          VERDICT=$(grep -E "^(PASS|FAIL)$" artifacts/04-report.md | tail -1 || echo "UNKNOWN")
+          VERDICT=$(grep -E "^(PASS|FAIL)$" "$ISSUE_DIR/04-report.md" | tail -1 || echo "UNKNOWN")
           echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
 
       - name: 提交产物
         run: |
-          git add artifacts/04-report.md
+          git add "$ISSUE_DIR/04-report.md"
           git commit -m "ci: 验收测试报告 (Issue #${{ inputs.issue_number }})" || true
           git push
 
@@ -70,8 +82,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RESULT="${{ steps.result.outputs.verdict }}"
-          gh issue comment ${{ inputs.issue_number }} \
-            --body "阶段三验收测试已完成，最终结论：**$RESULT**。详见 \`artifacts/04-report.md\`。"
+          ISSUE_NO="${{ inputs.issue_number }}"
+          REPO="${{ github.repository }}"
+          BRANCH="agentic/issue-${ISSUE_NO}"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          FMT="## 阶段三测试已完成 — ${RESULT}\n\n产物目录：\`${ISSUE_DIR}\`\n"
+          FMT="${FMT}- 测试用例：\`03-test-cases.md\`\n"
+          FMT="${FMT}- 测试报告：\`04-report.md\`\n"
+          FMT="${FMT}\n分支：${BRANCH_URL}"
+          BODY=$(printf '%s' "$FMT")
+          gh issue comment "$ISSUE_NO" -R "$REPO" --body "$BODY"
 
       - name: 若验收失败则标记工作流失败
         if: ${{ steps.result.outputs.verdict != 'PASS' }}
