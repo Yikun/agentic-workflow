@@ -1,0 +1,5 @@
+{
+  "default_branch": "main",
+  "runner": "ubuntu-latest",
+  "language": "zh-CN"
+}

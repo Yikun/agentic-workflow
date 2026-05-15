@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "workflow_version": "2026.05",
+  "files": [
+    ".github/workflows/01-requirements.yml",
+    ".github/workflows/01-requirements-qa.yml",
+    ".github/workflows/02-approve-gate.yml",
+    ".github/workflows/02-approve-invalidate.yml",
+    ".github/workflows/02-architect.yml",
+    ".github/workflows/02-architect-qa.yml",
+    ".github/workflows/02-coder.yml",
+    ".github/workflows/02-testcase-dev.yml",
+    ".github/workflows/03-ci-gate.yml",
+    ".github/workflows/03-tester.yml"
+  ]
+}
