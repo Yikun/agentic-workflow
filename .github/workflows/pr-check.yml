@@ -1,0 +1,24 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - feat/workflow-real-testing
+
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Basic Repository Sanity
+        run: |
+          echo "PR workflow is running."
+          test -f artifacts/01-requirements.md
+          test -f artifacts/02-architecture.md
+          test -d artifacts/src
+          echo "Sanity check passed."
