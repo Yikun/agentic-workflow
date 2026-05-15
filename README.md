@@ -23,13 +23,13 @@ GitHub Issue（需求输入）
 │  agents/<name>/CLAUDE.md                                     │
 │  ─ 每个 Agent 持有一份 CLAUDE.md，定义：角色、输入、输出、规则│
 │  ─ 由 Workflow 步骤中的 Claude CLI 调用执行                   │
-│  ─ 只读取 / 写入 artifacts/，不感知 GitHub 事件               │
+│  ─ 只读取 / 写入 docs/，不感知 GitHub 事件               │
 └──────────────────┬──────────────────────────────────────────┘
                    │ 读写
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                      Artifact                                 │
-│  artifacts/*.md  /  artifacts/src/                           │
+│  docs/*.md  /  docs/src/                           │
 │  ─ 唯一的跨阶段信息载体，提交到 git 实现持久化                │
 │  ─ 每个阶段有明确的输入 artifact 和输出 artifact              │
 └─────────────────────────────────────────────────────────────┘
@@ -41,15 +41,15 @@ GitHub Issue（需求输入）
 
 | 阶段 | Workflow 文件 | 调用的 Agent | 输入 Artifact | 输出 Artifact |
 |------|--------------|-------------|--------------|--------------|
-| 1 需求分析 | `01-requirements.yml` | `agents/requirements/` | `artifacts/00-user-brief.md` | `artifacts/01-requirements.md` |
-| 1b 需求 QA | `01-requirements-qa.yml` | `agents/requirements-qa/` | `artifacts/01-requirements.md` | `artifacts/01-requirements-qa.md` |
+| 1 需求分析 | `01-requirements.yml` | `agents/requirements/` | `docs/00-user-brief.md` | `docs/01-requirements.md` |
+| 1b 需求 QA | `01-requirements-qa.yml` | `agents/requirements-qa/` | `docs/01-requirements.md` | `docs/01-requirements-qa.md` |
 | ⛩ 阶段门禁 | `02-approve-gate.yml` | — | Issue `/approve` 评论 | 触发下一阶段 |
-| 2 架构设计 | `02-architect.yml` | `agents/architect/` | `artifacts/01-requirements.md` | `artifacts/02-architecture.md` |
-| 2b 架构 QA | `02-architect-qa.yml` | `agents/architect-qa/` | `artifacts/02-architecture.md` | `artifacts/02-architecture-qa.md` |
-| 2c 编码 | `02-coder.yml` | `agents/coder/` | `artifacts/01-requirements.md` + `02-architecture.md` | `artifacts/src/` + PR |
-| 2d 测试用例 | `02-testcase-dev.yml` | `agents/testcase-dev/` | `artifacts/src/` + `01-requirements.md` | `artifacts/03-test-cases.md` |
+| 2 架构设计 | `02-architect.yml` | `agents/architect/` | `docs/01-requirements.md` | `docs/02-architecture.md` |
+| 2b 架构 QA | `02-architect-qa.yml` | `agents/architect-qa/` | `docs/02-architecture.md` | `docs/02-architecture-qa.md` |
+| 2c 编码 | `02-coder.yml` | `agents/coder/` | `docs/01-requirements.md` + `02-architecture.md` | `docs/src/` + PR |
+| 2d 测试用例 | `02-testcase-dev.yml` | `agents/testcase-dev/` | `docs/src/` + `01-requirements.md` | `docs/03-test-cases.md` |
 | ⛩ CI 门禁 | `03-ci-gate.yml` | — | PR Required CI 状态 | 触发下一阶段 |
-| 3 验收测试 | `03-tester.yml` | `agents/tester/` | `artifacts/03-test-cases.md` + `artifacts/src/` | `artifacts/04-report.md` |
+| 3 验收测试 | `03-tester.yml` | `agents/tester/` | `docs/03-test-cases.md` + `docs/src/` | `docs/04-report.md` |
 
 ---
 
@@ -66,7 +66,7 @@ GitHub Issue（需求输入）
 ```
 .github/workflows/   # GitHub Actions Workflow 文件（调度层）
 agents/              # AI Agent 指令文件 CLAUDE.md（业务逻辑层）
-artifacts/           # 流水线产物，提交到 git（数据层）
+docs/           # 流水线产物，提交到 git（数据层）
   00-user-brief.md   # 用户原始需求（人工填写）
   01-requirements.md # 需求文档
   02-architecture.md # 架构设计文档
@@ -77,14 +77,14 @@ features/            # 新需求开发目录（用于新功能开发）
 ```
 
 **目录用途说明**：
-- `agents/`、`artifacts/`：本项目工作流自身的产物目录，由 Agent 自动生成或更新
+- `agents/`、`docs/`：本项目工作流自身的产物目录，由 Agent 自动生成或更新
 - `features/`：用于新需求开发，存放新功能的开发工作内容
 
 ---
 
 ## 快速开始
 
-1. 在 `artifacts/00-user-brief.md` 填写需求描述。
+1. 在 `docs/00-user-brief.md` 填写需求描述。
 2. 手动触发 `01-requirements.yml`，输入 `issue_number`。
 3. 等待阶段一完成后，在对应 Issue 评论 `/approve`。
 4. 后续阶段自动串联执行，最终在 Issue 发布测试报告。

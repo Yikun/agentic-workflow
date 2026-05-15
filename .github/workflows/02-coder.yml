@@ -34,8 +34,8 @@ jobs:
 
       - name: 校验依赖产物
         run: |
-          test -f artifacts/01-requirements.md
-          test -f artifacts/02-architecture.md
+          test -f docs/01-requirements.md
+          test -f docs/02-architecture.md
 
       - name: 切换到功能分支
         run: |
@@ -60,7 +60,7 @@ jobs:
             "$(cat agents/coder/CLAUDE.md)"
 
       - name: 校验代码产物
-        run: test -d artifacts/src
+        run: test -d docs/src
 
       - name: 提交代码并创建 PR
         env:
@@ -68,7 +68,7 @@ jobs:
         run: |
           ISSUE_NO=${{ inputs.issue_number }}
           BRANCH=agentic/issue-${{ inputs.issue_number }}
-          git add artifacts/src
+          git add docs/src
           git commit -m "feat: issue-$ISSUE_NO 阶段二代码交付" || true
           git push --set-upstream origin "$BRANCH" --force-with-lease
           gh pr create \

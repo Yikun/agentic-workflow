@@ -27,8 +27,8 @@ jobs:
 
       - name: 校验依赖产物
         run: |
-          test -f artifacts/01-requirements.md
-          test -d artifacts/src
+          test -f docs/01-requirements.md
+          test -d docs/src
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -49,11 +49,11 @@ jobs:
             "$(cat agents/testcase-dev/CLAUDE.md)"
 
       - name: 校验产物
-        run: test -f artifacts/03-test-cases.md
+        run: test -f docs/03-test-cases.md
 
       - name: 提交产物
         run: |
-          git add artifacts/03-test-cases.md
+          git add docs/03-test-cases.md
           git commit -m "ci: 验收测试用例 (Issue #${{ inputs.issue_number }})" || true
           git push
 

@@ -30,7 +30,7 @@ jobs:
           git pull --rebase
 
       - name: 校验架构文档存在
-        run: test -f artifacts/02-architecture.md
+        run: test -f docs/02-architecture.md
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -51,11 +51,11 @@ jobs:
             "$(cat agents/architect-qa/CLAUDE.md)"
 
       - name: 校验 QA 报告
-        run: test -f artifacts/02-architecture-qa.md
+        run: test -f docs/02-architecture-qa.md
 
       - name: 提交产物
         run: |
-          git add artifacts/02-architecture-qa.md
+          git add docs/02-architecture-qa.md
           git commit -m "ci: 阶段二架构 QA 报告 (Issue #${{ inputs.issue_number }})" || true
           git push
 

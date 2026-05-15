@@ -38,6 +38,6 @@
 
 ## D-07 FR-09 采用“逐条用例执行器 + 固定报告结构”
 
-- 决策：在 `03-tester.yml` 中调用 `agentic_workflow.acceptance`，逐条解析 `artifacts/03-test-cases.md` 并执行自动化校验，始终生成 `artifacts/04-report.md`。
+- 决策：在 `03-tester.yml` 中调用 `agentic_workflow.acceptance`，逐条解析 `docs/03-test-cases.md` 并执行自动化校验，始终生成 `docs/04-report.md`。
 - 原因：满足 FR-09 对“逐条执行、完整报告、与 CI 集合分离”的要求。
 - 取舍：未知或新引入的用例 ID 会标记为 `SKIPPED`，需要后续补充对应校验器。

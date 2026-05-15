@@ -79,7 +79,7 @@ def _validate_case(
             )
             and _check(
                 workflow_map["01-requirements-qa.yml"],
-                ["test -f artifacts/01-requirements.md"],
+                ["test -f docs/01-requirements.md"],
             ),
             "检查 requirements 与 requirements-qa 双阶段链路。",
         ),
@@ -128,12 +128,12 @@ def _validate_case(
         "TC-09": (
             _check(
                 workflow_map["02-architect.yml"],
-                ["test -f artifacts/02-architecture.md", "02-architect-qa.yml"],
+                ["test -f docs/02-architecture.md", "02-architect-qa.yml"],
             ),
             "检查架构产物与 QA 链路。",
         ),
         "TC-10": (
-            "test -d artifacts/src" in workflow_map["02-coder.yml"],
+            "test -d docs/src" in workflow_map["02-coder.yml"],
             "检查代码产物目录约束。",
         ),
         "TC-11": (
@@ -156,7 +156,7 @@ def _validate_case(
                 workflow_map["03-tester.yml"],
                 [
                     "python -m agentic_workflow.acceptance",
-                    "artifacts/04-report.md",
+                    "docs/04-report.md",
                     "final_result",
                 ],
             )
@@ -261,7 +261,7 @@ def _build_report(results: list[CaseResult]) -> str:
     lines.append("")
     lines.append("- FR-08 的 CI 门禁基于 PR Required 检查集合，仅用于阶段推进判定。")
     lines.append(
-        "- FR-09 的验收测试基于 artifacts/03-test-cases.md 逐条执行并产出报告，二者不可互相替代。"
+        "- FR-09 的验收测试基于 docs/03-test-cases.md 逐条执行并产出报告，二者不可互相替代。"
     )
     lines.append("")
 

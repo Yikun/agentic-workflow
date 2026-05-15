@@ -31,7 +31,7 @@ jobs:
           gh issue view ${{ inputs.issue_number }} \
             --json number,title,body \
             --jq '"# Issue #\(.number) — \(.title)\n\n\(.body)"' \
-            > artifacts/00-user-brief.md
+            > docs/00-user-brief.md
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -52,11 +52,11 @@ jobs:
             "$(cat agents/requirements/CLAUDE.md)"
 
       - name: 校验产物
-        run: test -f artifacts/01-requirements.md
+        run: test -f docs/01-requirements.md
 
       - name: 提交产物
         run: |
-          git add artifacts/00-user-brief.md artifacts/01-requirements.md
+          git add docs/00-user-brief.md docs/01-requirements.md
           git commit -m "ci: 阶段一需求文档 (Issue #${{ inputs.issue_number }})" || true
           git push
 

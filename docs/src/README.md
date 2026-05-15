@@ -13,7 +13,7 @@
 在仓库根目录执行：
 
 ```bash
-cd artifacts/src
+cd docs/src
 python -m pip install -U pip
 python -m pip install .
 ```
@@ -33,7 +33,7 @@ git pull
 ### 重新安装（若版本变化）
 
 ```bash
-cd artifacts/src
+cd docs/src
 python -m pip install -U .
 ```
 
@@ -84,7 +84,7 @@ agentic-workflow --repo-root . uninstall --keep-config
 
 ```bash
 # 1) 安装 CLI
-cd artifacts/src
+cd docs/src
 python -m pip install .
 
 # 2) 初始化配置（在仓库根目录执行）
@@ -186,10 +186,10 @@ agentic-workflow [--repo-root PATH] <command> [options]
 - `.agentic-workflow/manifest.json`：安装清单（用于升级/卸载）
 
 阶段三运行时会额外写入：
-- `artifacts/04-report.md`：tester 按 `artifacts/03-test-cases.md` 逐条执行后的验收测试报告。
+- `docs/04-report.md`：tester 按 `docs/03-test-cases.md` 逐条执行后的验收测试报告。
 
 ## 已知边界
 
 - `01-requirements.yml`、`01-requirements-qa.yml`、`02-architect.yml`、`02-architect-qa.yml`、`02-coder.yml`、`02-testcase-dev.yml` 中的 Agent 调用步骤仍为占位命令，需按你的执行环境替换。
 - `03-ci-gate.yml` 已实现 Required 集合读取（分支保护 + rulesets）与“全部 success 才放行”，若仓库权限不足无法读取 Required 集合，将按门禁未通过处理。
-- `03-tester.yml` 已实现逐条读取并执行 `artifacts/03-test-cases.md`，报告结构固定为汇总、逐条结果、失败分析、最终结论。
+- `03-tester.yml` 已实现逐条读取并执行 `docs/03-test-cases.md`，报告结构固定为汇总、逐条结果、失败分析、最终结论。

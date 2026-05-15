@@ -3,10 +3,10 @@
 You are a QA engineer. Your ONLY job is to execute tests and report results.
 
 ## Input
-Read artifacts/03-test-cases.md and artifacts/src/
+Read docs/03-test-cases.md and docs/src/
 
 ## Output
-Write artifacts/04-report.md with:
+Write docs/04-report.md with:
 - Summary table (total / passed / failed / skipped)
 - Per-test result with notes
 - Detailed failure breakdown

@@ -30,13 +30,13 @@ name: Lint and Type Check
 
 on:
   pull_request:
-          ISSUE_AUTHOR=$(gh issue view "$ISSUE_NO" -R "${{{{ github.repository }}}}" --json author --jq '.author.login')
+  push:
     branches:
       - main
       - feat/**
       - agentic/**
   workflow_dispatch:
-          gh workflow run 02-architect.yml -R "${{{{ github.repository }}}}" -f issue_number="$ISSUE_NO"
+
 permissions:
   contents: read
 
@@ -58,7 +58,7 @@ jobs:
       - name: Ruff format check
         run: ruff format --check .
       - name: Mypy
-        run: mypy artifacts/src
+        run: mypy docs/src
       - name: YAML lint
         run: |
           yamllint -d '{{extends: default, rules: {{document-start: disable, truthy: disable, line-length: {{max: 120}}}}}}' \
@@ -90,7 +90,7 @@ jobs:
       - name: 生成需求文档
         run: |
           echo \"请在此步骤调用 requirements Agent\"
-          test -f artifacts/01-requirements.md || (echo \"缺少 artifacts/01-requirements.md\" && exit 1)
+          test -f docs/01-requirements.md || (echo \"缺少 docs/01-requirements.md\" && exit 1)
       - name: 触发 requirements-qa
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
@@ -121,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: 校验需求文档存在
         run: |
-          test -f artifacts/01-requirements.md || (echo \"缺少 artifacts/01-requirements.md\" && exit 1)
+          test -f docs/01-requirements.md || (echo \"缺少 docs/01-requirements.md\" && exit 1)
       - name: 生成 QA 审查
         run: |
           echo \"请在此步骤调用 requirements-qa Agent\"
@@ -129,8 +129,11 @@ jobs:
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
         run: |
-          gh issue comment ${{{{ inputs.issue_number }}}} \\
-            --body \"需求分析阶段已完成。若认可结果，请由 Issue 作者评论 /approve；若需修改，请直接回复该评论。\"
+          REPO="${{{{ github.repository }}}}"
+          BRANCH="agentic/issue-${{{{ inputs.issue_number }}}}"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          BODY=$(printf '## 需求分析阶段已完成\\n\\n产物文档：\\n- 需求文档：`docs/01-requirements.md`\\n- QA 审查：`docs/01-requirements-qa.md`\\n\\n下一步：若认可结果，请由 Issue 作者评论 `/approve`；若需修改，请直接回复。')
+          gh issue comment ${{{{ inputs.issue_number }}}} -R "$REPO" --body "$BODY"
 """
 
 
@@ -227,7 +230,7 @@ jobs:
       - name: 生成架构文档
         run: |
           echo \"请在此步骤调用 architect Agent\"
-          test -f artifacts/02-architecture.md || (echo \"缺少 artifacts/02-architecture.md\" && exit 1)
+          test -f docs/02-architecture.md || (echo \"缺少 docs/02-architecture.md\" && exit 1)
       - name: 触发 architect-qa
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
@@ -265,7 +268,7 @@ jobs:
       - name: 执行架构 QA
         run: |
           echo \"请在此步骤调用 architect-qa Agent\"
-          test -f artifacts/02-architecture-qa.md || (echo \"缺少 artifacts/02-architecture-qa.md\" && exit 1)
+          test -f docs/02-architecture-qa.md || (echo \"缺少 docs/02-architecture-qa.md\" && exit 1)
       - name: 触发 coder
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
@@ -304,7 +307,7 @@ jobs:
       - name: 执行编码
         run: |
           echo \"请在此步骤调用 coder Agent\"
-          test -d artifacts/src || (echo \"缺少 artifacts/src\" && exit 1)
+          test -d docs/src || (echo \"缺少 docs/src\" && exit 1)
       - name: 创建 PR
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
@@ -312,7 +315,7 @@ jobs:
           ISSUE_NO=${{{{ inputs.issue_number }}}}
           BRANCH=agentic/issue-${{{{ inputs.issue_number }}}}
           git checkout -B \"$BRANCH\"
-          git add artifacts/src
+          git add docs/src
           git commit -m \"feat: issue-$ISSUE_NO 阶段二代码交付\" || true
           git push --set-upstream origin \"$BRANCH\"
           gh pr create \\
@@ -352,7 +355,7 @@ jobs:
       - name: 生成验收用例
         run: |
           echo \"请在此步骤调用 testcase-dev Agent\"
-          test -f artifacts/03-test-cases.md || (echo \"缺少 artifacts/03-test-cases.md\" && exit 1)
+          test -f docs/03-test-cases.md || (echo \"缺少 docs/03-test-cases.md\" && exit 1)
       - name: 触发 tester
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
@@ -430,16 +433,38 @@ jobs:
         run: |
           python -m agentic_workflow.acceptance \\
             --repo-root . \\
-            --test-cases artifacts/03-test-cases.md \\
-            --source-dir artifacts/src \\
-            --report artifacts/04-report.md \\
+            --test-cases docs/03-test-cases.md \\
+            --source-dir docs/src \\
+            --report docs/04-report.md \\
             --output \"$GITHUB_OUTPUT\"
+      - name: 归档本 Issue 产物
+        env:
+          GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
+        run: |
+          ISSUE_NO="${{{{ inputs.issue_number }}}}"
+          TITLE=$(gh issue view "$ISSUE_NO" -R "${{{{ github.repository }}}}" --json title --jq '.title')
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' \\
+            | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' \\
+            | sed 's/^-//;s/-$//' | cut -c1-40)
+          ARCHIVE_DIR="agentic-issues/issue-${{{{ISSUE_NO}}}}-${{{{SLUG}}}}"
+          mkdir -p "$ARCHIVE_DIR"
+          cp docs/*.md "$ARCHIVE_DIR/" 2>/dev/null || true
+          cp -r docs/src "$ARCHIVE_DIR/" 2>/dev/null || true
+          git add "$ARCHIVE_DIR"
+          git commit -m "archive: issue #${{{{ISSUE_NO}}}} — $TITLE" || true
+          git push
+          echo "ARCHIVE_DIR=$ARCHIVE_DIR" >> "$GITHUB_ENV"
       - name: 发布测试结论
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
         run: |
-          RESULT=\"${{{{ steps.acceptance.outputs.final_result }}}}\"
-          gh issue comment ${{{{ inputs.issue_number }}}} --body \"阶段三测试已完成，结论：$RESULT。请查看 artifacts/04-report.md。\"
+          RESULT="${{{{ steps.acceptance.outputs.final_result }}}}"
+          ISSUE_NO="${{{{ inputs.issue_number }}}}"
+          REPO="${{{{ github.repository }}}}"
+          BRANCH="agentic/issue-$ISSUE_NO"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          BODY=$(printf '## 阶段三测试已完成 — %s\\n\\n产物文档：\\n- 测试用例：`docs/03-test-cases.md`\\n- 测试报告：`docs/04-report.md`\\n- Issue 归档：`%s`\\n\\n分支：%s' "$RESULT" "$ARCHIVE_DIR" "$BRANCH_URL")
+          gh issue comment "$ISSUE_NO" -R "$REPO" --body "$BODY"
       - name: 若验收失败则标记工作流失败
         if: ${{{{ steps.acceptance.outputs.final_result != 'PASS' }}}}
         run: |
