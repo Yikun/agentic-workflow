@@ -57,7 +57,7 @@ jobs:
           PROMPT=$(sed "s|artifacts/|${ISSUE_DIR}/|g" .github/workflows/agents/testcase-dev/CLAUDE.md)
           ~/.opencode/bin/opencode run \
             --dangerously-skip-permissions \
-            -m alibaba-cn/qwen-plus \
+            -m alibaba-cn/glm-5 \
             "$PROMPT"
 
       - name: 校验产物
