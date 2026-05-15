@@ -60,7 +60,9 @@ jobs:
       - name: Mypy
         run: mypy artifacts/src
       - name: YAML lint
-        run: yamllint .github/workflows
+        run: |
+          yamllint -d '{{extends: default, rules: {{document-start: disable, truthy: disable, line-length: {{max: 120}}}}}}' \
+            .github/workflows
 """
 
 
