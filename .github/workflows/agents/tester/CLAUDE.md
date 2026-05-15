@@ -10,7 +10,7 @@ Write artifacts/04-report.md with:
 - Summary table (total / passed / failed / skipped)
 - Per-test result with notes
 - Detailed failure breakdown
-- Final recommendation: PASS or FAIL
+- Final recommendation section ending with a bare line containing only `PASS` or only `FAIL` (no markdown formatting, no other text on that line)
 
 ## Rules
 - Run every test case.
