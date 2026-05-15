@@ -19,3 +19,6 @@
 | 2026-05-15 | Stage 1 - Requirements（Issue #2） | ❌ 失败 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25903571992；失败 Job/Step：requirements / 安装 opencode |
 | 2026-05-15 | Stage 1 失败原因定位 | ✅ 完成 | 关键报错：`sh: 2: set: Illegal option -o pipefail`（`curl -fsSL https://opencode.ai/install | sh`）；随后 `curl: (23) Failure writing output to destination` |
 | 2026-05-15 | Stage 1 之后阶段（Issue #2） | ⛔ 未触发 | 由于 Stage 1 失败，01-requirements-qa 至 03-tester 本轮均未启动 |
+| 2026-05-15 | PR #4 提交（Stage1 安装修复） | ✅ 完成 | https://github.com/Yikun/agentic-workflow/pull/4；将 `curl -fsSL https://opencode.ai/install | sh` 改为 `| bash` |
+| 2026-05-15 | Stage 1 - Requirements（fix/stage1-opencode-bash） | ❌ 失败 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25903976646；`pipefail` 报错未再出现 |
+| 2026-05-15 | 新阻塞点定位 | ✅ 完成 | 失败发生在“触发 requirements-qa”步骤：`HTTP 403: Resource not accessible by integration`（`GITHUB_TOKEN` 触发下游 workflow 权限限制） |
