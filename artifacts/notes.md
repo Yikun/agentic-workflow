@@ -12,23 +12,22 @@ Pipeline model assignments — please confirm or change before we start:
 
   Step  Agent             Recommended model       Reason
   ────  ────────────────  ──────────────────────  ──────────────────────────────────
-  1     requirements      claude-sonnet-4-6        structured text analysis
-  1b    requirements-qa   claude-sonnet-4-6        document review
-  2     architect         claude-opus-4-7          complex trade-off reasoning
-  2b    architect-qa      claude-sonnet-4-6        document review
-  3     coder             claude-opus-4-7          multi-file code generation
-  3b    testcase-dev      claude-sonnet-4-6        structured document writing
-  4     tester            claude-sonnet-4-6        test execution and reporting
+  1     requirements      default        structured text analysis
+  1b    requirements-qa   default        document review
+  2     architect         complex          complex trade-off reasoning
+  2b    architect-qa      default        document review
+  3     coder             complex          multi-file code generation
+  3b    testcase-dev      default        structured document writing
+  4     tester            default        test execution and reporting
 
 Confirm, or tell me which steps to change.
 ```
 
 Wait for the user to confirm or modify. Then lock in the assignments and proceed with the pipeline — do not ask again per step.
 
-Suggested models:
-- Opus (claude-opus-4-7): architect, coder — complex reasoning and generation
-- Sonnet (claude-sonnet-4-6): all other agents — structured analysis and writing
-- Haiku (claude-haiku-4-5-20251001): not recommended for any agent in this pipeline
+Such as suggested models:
+- Opus (complex): architect, coder — complex reasoning and generation
+- Sonnet (default): all other agents — structured analysis and writing
 
 ## Pipeline order
 1. Run agents/requirements/ → produces artifacts/01-requirements.md
