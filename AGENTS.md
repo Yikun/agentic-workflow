@@ -24,11 +24,32 @@
 
 所有检查均须以零错误退出（exit code 0）方可推送。
 
+## 产物归档规范（Artifact Ownership）
+
+每个 Agent 只负责写入自己职责范围内的文件，不得越权写入其他 Agent 或 Workflow 的产物。
+
+| 文件路径 | 写入方 | 说明 |
+|---|---|---|
+| `artifacts/00-user-brief.md` | requirements agent | agent 从 GitHub Issue 获取内容后写入 |
+| `artifacts/01-requirements.md` | requirements agent | 需求分析报告 |
+| `artifacts/01-requirements-qa.md` | requirements-qa agent | 需求 QA 审查报告 |
+| `artifacts/02-architecture.md` | architect agent | 架构设计文档 |
+| `artifacts/02-architecture-qa.md` | architect-qa agent | 架构 QA 报告 |
+| `artifacts/03-test-cases.md` | testcase-dev agent | 验收测试用例 |
+| `artifacts/04-report.md` | tester agent | 验收测试报告 |
+| `agentic-issues/{n}/` | Stage 3 workflow（git commit） | Stage 3 完成后自动归档本 Issue 全部产物；各 Issue 归档互不覆盖 |
+
+**禁止项（任何角色均不得违反）**：
+- Workflow 脚本（`.github/workflows/`）**不得**通过 shell 直接向 `artifacts/` 写入文件内容，只允许 `git add/commit` 提交 agent 已生成的产物。
+- Agent **不得**修改 `.github/workflows/`、`agents/`、`AGENTS.md`、`README.md` 等项目配置文件。
+- Agent **不得**修改其他 Agent 职责范围内的产物文件。
+- Agent 和 Workflow **均不得**修改被流水线处理的目标项目的源文件（即本仓库之外的任何文件）。
+
 ## Agent 行为约束
 
 - Agent 不得直接调用 `git push` 向 `main` 推送，只能推送到 feature 分支。
+- Agent 仅可提交并推送 PR，不得自行执行 PR 合并（例如 `gh pr merge`）；**必须由人工完成合并**。
 - Agent 在生成代码后，须在本地执行上述 lint/格式检查并确认通过，再提交到 feature 分支。
-- Agent 不得修改 `artifacts/01-requirements.md`（需求文档由 requirements agent 负责）。
 - Agent 不得绕过 FR-04 定义的人工审批门禁（`/approve` 评论）自动推进阶段。
 
 ## 重要提示
