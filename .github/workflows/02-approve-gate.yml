@@ -30,7 +30,18 @@ jobs:
             echo "仅 Issue 作者可批准。"
             exit 0
           fi
-           gh workflow run 02-architect.yml \
-             -R "${{ github.repository }}" \
-             --ref "${{ github.ref_name }}" \
-             -f issue_number="$ISSUE_NO"
+          # Find the branch that has agentic-issues/issue-{N}-* artifacts
+          BRANCH=$(gh api "repos/${{ github.repository }}/git/refs/heads" \
+            --jq '.[].ref | ltrimstr("refs/heads/")' | \
+            while IFS= read -r b; do
+              if gh api "repos/${{ github.repository }}/contents/agentic-issues" \
+                --ref "$b" --jq '.[].name' 2>/dev/null | grep -q "^issue-${ISSUE_NO}-"; then
+                echo "$b"; break
+              fi
+            done)
+          BRANCH="${BRANCH:-${{ github.event.repository.default_branch }}}"
+          echo "Triggering architect on branch: $BRANCH"
+          gh workflow run 02-architect.yml \
+            -R "${{ github.repository }}" \
+            --ref "$BRANCH" \
+            -f issue_number="$ISSUE_NO"
