@@ -84,10 +84,23 @@ docs/                           # 本项目静态文档
 
 ---
 
+## 前置条件
+
+在 GitHub 仓库的 **Settings → Secrets and variables → Actions** 中配置以下 Secret：
+
+| Secret 名称 | 说明 |
+|------------|------|
+| `DASHSCOPE_API_KEY` | 阿里云百炼 API Key，用于驱动所有 opencode Agent |
+
+所有 Workflow 均已在 `main` 分支就绪，无需额外安装步骤。
+
+---
+
 ## 快速开始
 
-1. 创建一个 GitHub Issue，描述需求。
-2. 手动触发 `01-requirements.yml`，输入该 Issue 的编号。
-3. 等待阶段一完成后，在对应 Issue 评论 `/approve`。
-4. 后续阶段自动串联执行，产物写入 `agentic-issues/issue-{n}-{slug}/`，最终在 Issue 发布测试报告。
+1. 在仓库 Secrets 中配置 `DASHSCOPE_API_KEY`（见上方前置条件）。
+2. 创建一个 GitHub Issue，描述需求。
+3. 手动触发 `01-requirements.yml`，输入该 Issue 的编号。
+4. 等待阶段一完成后，在对应 Issue 评论 `/approve`。
+5. 后续阶段自动串联执行，产物写入 `agentic-issues/issue-{n}-{slug}/`，最终在 Issue 发布测试报告。
 
