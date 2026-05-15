@@ -10,6 +10,7 @@ def workflow_templates(
     default_branch: str = DEFAULT_BRANCH,
 ) -> dict[str, str]:
     return {
+    "00-lint.yml": _lint_template(runner),
         "01-requirements.yml": _requirements_template(runner),
         "01-requirements-qa.yml": _requirements_qa_template(runner),
         "02-approve-gate.yml": _approve_gate_template(runner),
@@ -21,6 +22,46 @@ def workflow_templates(
         "03-ci-gate.yml": _ci_gate_template(runner),
         "03-tester.yml": _tester_template(runner),
     }
+
+
+def _lint_template(runner: str) -> str:
+    return f"""{GENERATED_MARK}
+name: Lint and Type Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/**
+      - agentic/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: {runner}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: \"3.12\"
+      - name: Install check tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ruff mypy yamllint
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Mypy
+        run: mypy artifacts/src
+      - name: YAML lint
+        run: yamllint .github/workflows
+"""
 
 
 def _requirements_template(runner: str) -> str:
