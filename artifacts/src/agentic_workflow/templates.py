@@ -79,6 +79,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
   issues: write
 
 jobs:
@@ -323,7 +324,7 @@ jobs:
         env:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
         run: |
-          gh workflow run 02-testcase-dev.yml -f issue_number=${{{{ inputs.issue_number }}}}
+          gh workflow run 02-testcase-dev.yml -R "${{{{ github.repository }}}}" -f issue_number=${{{{ inputs.issue_number }}}}
 """
 
 
@@ -340,6 +341,8 @@ on:
 
 permissions:
   contents: write
+  actions: write
+  issues: write
 
 jobs:
   testcase_dev:
@@ -350,6 +353,12 @@ jobs:
         run: |
           echo \"请在此步骤调用 testcase-dev Agent\"
           test -f artifacts/03-test-cases.md || (echo \"缺少 artifacts/03-test-cases.md\" && exit 1)
+      - name: 触发 tester
+        env:
+          GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
+        run: |
+          gh issue comment \"${{{{ inputs.issue_number }}}}\" -R \"${{{{ github.repository }}}}\" --body \"验收测试用例已生成，自动进入第三阶段测试。\"
+          gh workflow run 03-tester.yml -R \"${{{{ github.repository }}}}\" -f issue_number=\"${{{{ inputs.issue_number }}}}\"
 """
 
 
@@ -386,8 +395,8 @@ jobs:
           GH_TOKEN: ${{{{ secrets.GITHUB_TOKEN }}}}
         run: |
           ISSUE_NO=\"${{{{ steps.gate.outputs.issue_number }}}}\"
-          gh issue comment \"$ISSUE_NO\" --body \"PR Required CI 检查已全部通过，自动进入第三阶段测试。\"
-          gh workflow run 03-tester.yml -f issue_number=\"$ISSUE_NO\"
+          gh issue comment "$ISSUE_NO" -R "${{{{ github.repository }}}}" --body "PR Required CI 检查已全部通过，自动进入第三阶段测试。"
+          gh workflow run 03-tester.yml -R "${{{{ github.repository }}}}" -f issue_number="$ISSUE_NO"
       - name: 记录门禁未通过原因
         if: ${{{{ steps.gate.outputs.pass != 'true' }}}}
         run: |

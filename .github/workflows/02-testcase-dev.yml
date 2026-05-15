@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: write
+  actions: write
+  issues: write
 
 jobs:
   testcase_dev:
@@ -54,3 +56,11 @@ jobs:
           git add artifacts/03-test-cases.md
           git commit -m "ci: 验收测试用例 (Issue #${{ inputs.issue_number }})" || true
           git push
+
+      - name: 触发 tester
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment "${{ inputs.issue_number }}" -R "${{ github.repository }}" \
+            --body "验收测试用例已生成，自动进入第三阶段测试。"
+          gh workflow run 03-tester.yml -R "${{ github.repository }}" -f issue_number=${{ inputs.issue_number }}
