@@ -24,9 +24,20 @@ jobs:
           git config user.name "GitHub Actions"
           git pull --rebase
 
+      - name: 计算 Issue 工作目录
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NO="${{ inputs.issue_number }}"
+          TITLE=$(gh issue view "$ISSUE_NO" -R "${{ github.repository }}" --json title --jq '.title')
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' | cut -c1-40)
+          echo "ISSUE_DIR=agentic-issues/issue-${ISSUE_NO}-${SLUG}" >> "$GITHUB_ENV"
+
       - name: 校验需求文档存在
         run: |
-          test -f artifacts/01-requirements.md || (echo "缺少 artifacts/01-requirements.md" && exit 1)
+          test -f "$ISSUE_DIR/01-requirements.md" || (echo "缺少 $ISSUE_DIR/01-requirements.md" && exit 1)
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -41,17 +52,18 @@ jobs:
 
       - name: 运行 requirements-qa Agent
         run: |
+          PROMPT=$(sed "s|artifacts/|${ISSUE_DIR}/|g" .github/workflows/agents/requirements-qa/CLAUDE.md)
           ~/.opencode/bin/opencode run \
             --dangerously-skip-permissions \
             -m alibaba-cn/qwen-plus \
-            "$(cat agents/requirements-qa/CLAUDE.md)"
+            "$PROMPT"
 
       - name: 校验 QA 报告
-        run: test -f artifacts/01-requirements-qa.md
+        run: test -f "$ISSUE_DIR/01-requirements-qa.md"
 
       - name: 提交产物
         run: |
-          git add artifacts/01-requirements-qa.md
+          git add "$ISSUE_DIR/01-requirements-qa.md"
           git commit -m "ci: 阶段一需求 QA 报告 (Issue #${{ inputs.issue_number }})" || true
           git push
 
@@ -59,7 +71,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ inputs.issue_number }} \
-            --body "需求分析阶段已完成，QA 审查报告已写入 \`artifacts/01-requirements-qa.md\`。
-
-          若认可结果，请由 Issue 作者评论 \`/approve\` 进入第二阶段；若需修改，请直接回复本评论描述修改意见。"
+          REPO="${{ github.repository }}"
+          FMT='## 需求分析阶段已完成\n\n产物文档：\n'
+          FMT="${FMT}- 需求文档：\`$ISSUE_DIR/01-requirements.md\`\n"
+          FMT="${FMT}- QA 审查：\`$ISSUE_DIR/01-requirements-qa.md\`\n"
+          FMT="${FMT}\n下一步：若认可结果，请由 Issue 作者评论 \`/approve\`；若需修改，请直接回复。"
+          BODY=$(printf '%s' "$FMT")
+          gh issue comment ${{ inputs.issue_number }} -R "$REPO" --body "$BODY"

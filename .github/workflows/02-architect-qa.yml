@@ -29,8 +29,19 @@ jobs:
           git config user.name "GitHub Actions"
           git pull --rebase
 
+      - name: 计算 Issue 工作目录
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NO="${{ inputs.issue_number }}"
+          TITLE=$(gh issue view "$ISSUE_NO" -R "${{ github.repository }}" --json title --jq '.title')
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' | cut -c1-40)
+          echo "ISSUE_DIR=agentic-issues/issue-${ISSUE_NO}-${SLUG}" >> "$GITHUB_ENV"
+
       - name: 校验架构文档存在
-        run: test -f artifacts/02-architecture.md
+        run: test -f "$ISSUE_DIR/02-architecture.md"
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -45,17 +56,18 @@ jobs:
 
       - name: 运行 architect-qa Agent
         run: |
+          PROMPT=$(sed "s|artifacts/|${ISSUE_DIR}/|g" .github/workflows/agents/architect-qa/CLAUDE.md)
           ~/.opencode/bin/opencode run \
             --dangerously-skip-permissions \
             -m alibaba-cn/qwen-plus \
-            "$(cat agents/architect-qa/CLAUDE.md)"
+            "$PROMPT"
 
       - name: 校验 QA 报告
-        run: test -f artifacts/02-architecture-qa.md
+        run: test -f "$ISSUE_DIR/02-architecture-qa.md"
 
       - name: 提交产物
         run: |
-          git add artifacts/02-architecture-qa.md
+          git add "$ISSUE_DIR/02-architecture-qa.md"
           git commit -m "ci: 阶段二架构 QA 报告 (Issue #${{ inputs.issue_number }})" || true
           git push
 

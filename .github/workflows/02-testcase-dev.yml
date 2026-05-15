@@ -25,10 +25,21 @@ jobs:
           git config user.name "GitHub Actions"
           git pull --rebase
 
+      - name: 计算 Issue 工作目录
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NO="${{ inputs.issue_number }}"
+          TITLE=$(gh issue view "$ISSUE_NO" -R "${{ github.repository }}" --json title --jq '.title')
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' \
+            | sed 's/^-//;s/-$//' | cut -c1-40)
+          echo "ISSUE_DIR=agentic-issues/issue-${ISSUE_NO}-${SLUG}" >> "$GITHUB_ENV"
+
       - name: 校验依赖产物
         run: |
-          test -f artifacts/01-requirements.md
-          test -d artifacts/src
+          test -f "$ISSUE_DIR/01-requirements.md"
+          test -d "$ISSUE_DIR/src"
 
       - name: 安装 opencode
         run: curl -fsSL https://opencode.ai/install | bash
@@ -43,17 +54,18 @@ jobs:
 
       - name: 运行 testcase-dev Agent
         run: |
+          PROMPT=$(sed "s|artifacts/|${ISSUE_DIR}/|g" .github/workflows/agents/testcase-dev/CLAUDE.md)
           ~/.opencode/bin/opencode run \
             --dangerously-skip-permissions \
             -m alibaba-cn/qwen-plus \
-            "$(cat agents/testcase-dev/CLAUDE.md)"
+            "$PROMPT"
 
       - name: 校验产物
-        run: test -f artifacts/03-test-cases.md
+        run: test -f "$ISSUE_DIR/03-test-cases.md"
 
       - name: 提交产物
         run: |
-          git add artifacts/03-test-cases.md
+          git add "$ISSUE_DIR/03-test-cases.md"
           git commit -m "ci: 验收测试用例 (Issue #${{ inputs.issue_number }})" || true
           git push
 
