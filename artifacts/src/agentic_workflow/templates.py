@@ -30,13 +30,13 @@ name: Lint and Type Check
 
 on:
   pull_request:
-  push:
+          ISSUE_AUTHOR=$(gh issue view "$ISSUE_NO" -R "${{{{ github.repository }}}}" --json author --jq '.author.login')
     branches:
       - main
       - feat/**
       - agentic/**
   workflow_dispatch:
-
+          gh workflow run 02-architect.yml -R "${{{{ github.repository }}}}" -f issue_number="$ISSUE_NO"
 permissions:
   contents: read
 

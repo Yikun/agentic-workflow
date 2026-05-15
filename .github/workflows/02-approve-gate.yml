@@ -24,10 +24,10 @@ jobs:
             exit 0
           fi
           ISSUE_NO=${{ github.event.issue.number }}
-          ISSUE_AUTHOR=$(gh issue view "$ISSUE_NO" --json author --jq '.author.login')
+           ISSUE_AUTHOR=$(gh issue view "$ISSUE_NO" -R "${{ github.repository }}" --json author --jq '.author.login')
           COMMENT_AUTHOR="${{ github.event.comment.user.login }}"
           if [ "$ISSUE_AUTHOR" != "$COMMENT_AUTHOR" ]; then
             echo "仅 Issue 作者可批准。"
             exit 0
           fi
-          gh workflow run 02-architect.yml --repo ${{ github.repository }} -f issue_number="$ISSUE_NO"
+           gh workflow run 02-architect.yml -R "${{ github.repository }}" -f issue_number="$ISSUE_NO"
