@@ -15,6 +15,7 @@ concurrency:
 permissions:
   contents: write
   issues: write
+  actions: write
 
 jobs:
   architect_qa:
@@ -32,7 +33,7 @@ jobs:
         run: test -f artifacts/02-architecture.md
 
       - name: 安装 opencode
-        run: curl -fsSL https://opencode.ai/install | sh
+        run: curl -fsSL https://opencode.ai/install | bash
 
       - name: 配置 opencode 凭据
         env:

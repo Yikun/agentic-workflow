@@ -29,7 +29,7 @@ jobs:
           test -f artifacts/01-requirements.md || (echo "缺少 artifacts/01-requirements.md" && exit 1)
 
       - name: 安装 opencode
-        run: curl -fsSL https://opencode.ai/install | sh
+        run: curl -fsSL https://opencode.ai/install | bash
 
       - name: 配置 opencode 凭据
         env:
