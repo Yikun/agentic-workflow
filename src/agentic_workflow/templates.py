@@ -30,13 +30,12 @@ name: Lint and Type Check
 
 on:
   pull_request:
-          ISSUE_AUTHOR=$(gh issue view "$ISSUE_NO" -R "${{{{ github.repository }}}}" --json author --jq '.author.login')
     branches:
       - main
       - feat/**
       - agentic/**
   workflow_dispatch:
-          gh workflow run 02-architect.yml -R "${{{{ github.repository }}}}" -f issue_number="$ISSUE_NO"
+
 permissions:
   contents: read
 
@@ -58,7 +57,7 @@ jobs:
       - name: Ruff format check
         run: ruff format --check .
       - name: Mypy
-        run: mypy artifacts/src
+        run: mypy src
       - name: YAML lint
         run: |
           yamllint -d '{{extends: default, rules: {{document-start: disable, truthy: disable, line-length: {{max: 120}}}}}}' \
