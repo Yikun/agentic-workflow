@@ -33,7 +33,7 @@ jobs:
         run: pip install -e artifacts/src/
 
       - name: 安装 opencode
-        run: curl -fsSL https://opencode.ai/install | sh
+        run: curl -fsSL https://opencode.ai/install | bash
 
       - name: 配置 opencode 凭据
         env:
