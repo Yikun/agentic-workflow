@@ -22,3 +22,7 @@
 | 2026-05-15 | PR #4 提交（Stage1 安装修复） | ✅ 完成 | https://github.com/Yikun/agentic-workflow/pull/4；将 `curl -fsSL https://opencode.ai/install | sh` 改为 `| bash` |
 | 2026-05-15 | Stage 1 - Requirements（fix/stage1-opencode-bash） | ❌ 失败 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25903976646；`pipefail` 报错未再出现 |
 | 2026-05-15 | 新阻塞点定位 | ✅ 完成 | 失败发生在“触发 requirements-qa”步骤：`HTTP 403: Resource not accessible by integration`（`GITHUB_TOKEN` 触发下游 workflow 权限限制） |
+| 2026-05-15 | Stage 2 Gate - Approve 失败定位 | ✅ 完成 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25904251428；关键报错：`failed to run git: fatal: not a git repository`（`gh workflow run` 缺少 `--repo` 参数） |
+| 2026-05-15 | PR #5 提交（不干净） | ❌ 已关闭 | 混合了已合并改动和 artifacts 产物文件，不符合 PR 规范 |
+| 2026-05-15 | PR #6 提交（干净版本） | ✅ 完成 | https://github.com/Yikun/agentic-workflow/pull/6；仅修改 6 处 workflow 文件 + README.md 目录说明 |
+| 2026-05-15 | PR #6 Lint Check | ✅ 通过 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25904879439（pull_request 自动触发） |
