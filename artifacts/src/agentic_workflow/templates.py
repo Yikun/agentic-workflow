@@ -10,7 +10,7 @@ def workflow_templates(
     default_branch: str = DEFAULT_BRANCH,
 ) -> dict[str, str]:
     return {
-    "00-lint.yml": _lint_template(runner),
+        "00-lint.yml": _lint_template(runner),
         "01-requirements.yml": _requirements_template(runner),
         "01-requirements-qa.yml": _requirements_qa_template(runner),
         "02-approve-gate.yml": _approve_gate_template(runner),
