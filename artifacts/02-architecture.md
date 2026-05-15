@@ -64,7 +64,7 @@
 | 门禁 | 位置 | 判定逻辑 |
 |------|------|---------|
 | **人工审批门禁** | 阶段一→二 | 监听 Issue 评论事件，检查发布者身份（须为 Issue 原作者）及评论内容（去首尾空白后精确等于 `/approve`，大小写敏感），满足条件的最早一条评论方可触发阶段二 |
-| **CI 状态门禁** | 阶段二→三 | 轮询 PR HEAD 提交上的全部 Required 状态检查；全部为 success 时方可触发阶段三；任一为非 success 或 Required 集合为空，均不得推进 |
+| **CI 状态门禁** | 阶段二→三 | 事件驱动校验 PR HEAD 提交上的 Required 状态检查；全部为 success 时方可触发阶段三；任一为非 success 或 Required 集合为空，均不得推进 |
 
 #### 2.4 产物存储层
 
@@ -128,11 +128,13 @@
 
 | 状态值 | 写入方 | 存储位置 | 读取方 |
 |--------|--------|---------|--------|
-| 批准评论 ID | `02-approve-gate.yml`（触发阶段二时写入） | `artifacts/state/issue-{issue_number}.json` |
-| 阶段二活跃 run_id | 阶段二每个子 Workflow（`02-architect.yml`、`02-architect-qa.yml`、`02-coder.yml`、`02-testcase-dev.yml`）在启动步骤覆盖写入当前 `github.run_id` | `artifacts/state/issue-{issue_number}.json` |
-| 当前阶段状态（可选） | 阶段二/三门禁 Workflow | `artifacts/state/issue-{issue_number}.json` |
+| 批准评论 ID | `02-approve-gate.yml`（触发阶段二时写入） | 目标 Issue 上由系统发布的状态评论（固定标记：`<!-- state:approval -->`） |
+| 阶段二活跃 run_id | 阶段二每个子 Workflow 在启动步骤写入 | 目标 Issue 标签：`stage2-active` + 状态评论字段 `stage2_run_id` |
+| 当前阶段状态（可选） | 阶段二/三门禁 Workflow | 目标 Issue 状态评论字段 `stage`（如 `stage2`/`stage3`） |
 
-- 读取方：`02-approve-invalidate.yml` 与阶段二各子 Workflow 的守卫步骤均必须按 `issue_number` 读取对应状态文件并做一致性校验，不得读取跨 Issue 的共享单值状态。
+- 读取方：`02-approve-invalidate.yml` 与阶段二各子 Workflow 的守卫步骤均必须按 `issue_number` 读取该 Issue 的状态评论与标签并做一致性校验，不得使用仓库级单值变量作为状态源。
+
+- 并发控制：阶段二相关 Workflow 必须使用 `concurrency.group: stage2-${{ inputs.issue_number }}`，并在写状态时校验 `issue_number` 与当前 Workflow 上下文一致，避免同仓库多 Issue 并发互相覆盖。
 
 - **阶段二失效控制规则**：阶段二每个子 Workflow 在首个步骤必须执行“批准有效性守卫检查”（重新拉取 `APPROVE_COMMENT_ID` 对应评论并校验仍满足 FR-04）；若校验失败则立即退出，不继续执行后续步骤。
 
@@ -145,11 +147,12 @@
 
 #### 4.5 阶段门禁接口：CI 状态 → 阶段三触发
 
-- **触发事件**：监听 `check_suite.completed` 事件（过滤 `conclusion` 为 `success` 或 `failure`）；在事件处理逻辑内调用 GitHub Checks API（`GET /repos/{owner}/{repo}/commits/{ref}/check-runs`）查询 PR HEAD 提交上的全部 Required 状态检查后，决定是否触发阶段三
-- **检查对象**：PR HEAD 提交的全部 Required 状态检查（通过 GitHub Checks API 查询）
+- **触发事件**：监听 `check_suite.completed` 事件；仅在事件可映射到目标 PR 且 `event.head_sha == 目标 PR 当前 HEAD SHA` 时继续执行
+- **Required 集合来源**：从目标 PR 的 base 分支保护规则或 Rulesets 读取 Required 状态检查集合（例如 `GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks` 或对应 Rulesets API）
+- **比对算法**：以 Required 集合为基准，逐项检查其在目标 PR 当前 HEAD 提交上的结论是否为 `success`；禁止将“所有 check-runs”直接等同为 Required 集合
 - **合法性校验**：
   - Required 检查集合非空
-  - 全部状态为 `success`
+        - Required 集合逐项状态均为 `success`
 - **输出**：在原 Issue 发布评论宣告进入阶段三；触发阶段三 Workflow
 
 #### 4.6 阶段三内部接口：Agent 间数据传递
