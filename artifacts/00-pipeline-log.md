@@ -22,3 +22,6 @@
 | 2026-05-15 | PR #4 提交（Stage1 安装修复） | ✅ 完成 | https://github.com/Yikun/agentic-workflow/pull/4；将 `curl -fsSL https://opencode.ai/install | sh` 改为 `| bash` |
 | 2026-05-15 | Stage 1 - Requirements（fix/stage1-opencode-bash） | ❌ 失败 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25903976646；`pipefail` 报错未再出现 |
 | 2026-05-15 | 新阻塞点定位 | ✅ 完成 | 失败发生在“触发 requirements-qa”步骤：`HTTP 403: Resource not accessible by integration`（`GITHUB_TOKEN` 触发下游 workflow 权限限制） |
+| 2026-05-15 | Stage 2 Gate - Approve 失败定位 | ✅ 完成 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25904251428；关键报错：`failed to run git: fatal: not a git repository`（`gh workflow run` 缺少 `--repo` 参数） |
+| 2026-05-15 | 修复 gh workflow run 缺少 --repo | ✅ 已提交 | PR #5：https://github.com/Yikun/agentic-workflow/pull/5，修复 6 处 `gh workflow run` 命令 |
+| 2026-05-15 | PR #5 Lint Check | ✅ 通过 | Run: https://github.com/Yikun/agentic-workflow/actions/runs/25904703881（workflow_dispatch 手动触发） |

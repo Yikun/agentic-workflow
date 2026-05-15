@@ -30,4 +30,4 @@ jobs:
             echo "仅 Issue 作者可批准。"
             exit 0
           fi
-          gh workflow run 02-architect.yml -f issue_number="$ISSUE_NO"
+          gh workflow run 02-architect.yml --repo ${{ github.repository }} -f issue_number="$ISSUE_NO"

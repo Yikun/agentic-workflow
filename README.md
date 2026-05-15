@@ -73,7 +73,12 @@ artifacts/           # 流水线产物，提交到 git（数据层）
   03-test-cases.md   # 验收测试用例
   04-report.md       # 测试报告
   src/               # 生成的源代码
+features/            # 新需求开发目录（用于新功能开发）
 ```
+
+**目录用途说明**：
+- `agents/`、`artifacts/`：本项目工作流自身的产物目录，由 Agent 自动生成或更新
+- `features/`：用于新需求开发，存放新功能的开发工作内容
 
 ---
 
