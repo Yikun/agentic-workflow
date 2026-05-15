@@ -63,4 +63,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run 02-coder.yml -f issue_number=${{ inputs.issue_number }}
+          gh workflow run 02-coder.yml --repo ${{ github.repository }} -f issue_number=${{ inputs.issue_number }}
